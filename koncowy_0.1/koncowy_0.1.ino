@@ -12,51 +12,25 @@ registers r;
 date d1,d2;
 motor m1,m2;
 control_prams c;
+
 void setup() {
-  
+  Serial.begin(9600);
   ADC_Init(&f,&params);
-  TWIInit();
   PCF8563_init_default(&r);
   control_init_default(&c);
-  reset_all(&r);
   init_power_down();
   motors_init_default(&m1,&m2);
-  d2.seconds=50;
-  d2.minutes=1;
-  d2.hours=1;
-  d2.days=1;
-  set_date(&d2,&r);
- 
-  //d1.seconds=15;
-
- // d1.hours=14;
- // d1.days=5;
-  delay(10);
-     d1.minutes=1;
-  alarm_set_incremental(&d1,&r);
-  delay(10);
-  alarm_enable(&r);
-  delay(10);
-  Serial.begin(9600);
   sleep_enable();
   sei(); 
- // motor_homing(&m1);
   m1.current_position=m1.max_pulse;
 }
 void loop() {
   
-//mozna dodac minimalny poziom, przy ktorym nastapi detekcja
-  go_to_sleep();
-  delay(100);
-  alarm_accept(&r);
-  delay(100);
   read_resistors(&f,&params);
   correct_fotoresistors(&f,&params);
   print_fotoresistors(&f);
-  correct_position(&f,&c,&m1,&m2);
-  delay(10);
-  d1.minutes=10;
-  alarm_set_incremental(&d1,&r);
+
+  delay(1000);
 
 
 
@@ -94,7 +68,6 @@ ISR(ADC_vect)
     f.Vr1=temp;
     f.state=0;
     break;
-  
   }
   //Serial.println("Tutaj2");
 }
