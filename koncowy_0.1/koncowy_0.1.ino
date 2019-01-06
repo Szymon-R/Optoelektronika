@@ -1,27 +1,30 @@
-#include "ADC.c"
+
 #include "PCF8563.c"
 #include "TWI.c"
 #include "PowerDown.c"
-#include "Motors.h                               "
+#include "Motors.h"
+#include "Control.c"
+#include "ADC.c"
 
 fotoresistors f;
 ADC_params params;
 registers r;
 date d1,d2;
 motor m1,m2;
-
+control_prams c;
 void setup() {
   
   ADC_Init(&f,&params);
   TWIInit();
   PCF8563_init_default(&r);
+  control_init_default(&c);
   reset_all(&r);
   init_power_down();
   motors_init_default(&m1,&m2);
-  d2.seconds=55;
-  d2.minutes=52;
-  d2.hours=14;
-  d2.days=5;
+  d2.seconds=50;
+  d2.minutes=1;
+  d2.hours=1;
+  d2.days=1;
   set_date(&d2,&r);
  
   //d1.seconds=15;
@@ -30,43 +33,39 @@ void setup() {
  // d1.days=5;
   delay(10);
      d1.minutes=1;
-    alarm_set_incremental(&d1,&r);
+  alarm_set_incremental(&d1,&r);
   delay(10);
   alarm_enable(&r);
   delay(10);
   Serial.begin(9600);
   sleep_enable();
   sei(); 
-  motors_init_default(&m1,&m2);
-  motor_homing(&m1);
+ // motor_homing(&m1);
+  m1.current_position=m1.max_pulse;
 }
-
 void loop() {
   
-  print_servo_info(&m1,&m2);
- /* m1.setpoint_position=2600;
-  motor_move(&m1);
-  m1.setpoint_position=600;
-  motor_move(&m1);
-  */
-
- /*
- go_to_sleep();
- delay(100);
- alarm_accept(&r);
-  delay(1000);
+//mozna dodac minimalny poziom, przy ktorym nastapi detekcja
+  go_to_sleep();
+  delay(100);
+  alarm_accept(&r);
+  delay(100);
   read_resistors(&f,&params);
   correct_fotoresistors(&f,&params);
   print_fotoresistors(&f);
- // read_all(&r);
-  delay(100);
-  d1.minutes=1;
+  correct_position(&f,&c,&m1,&m2);
+  delay(10);
+  d1.minutes=10;
   alarm_set_incremental(&d1,&r);
+
+
+
+  /*
+  read_resistors(&f,&params);
+  correct_fotoresistors(&f,&params);
   print_fotoresistors(&f);
-  delay(100);
-  read_date(&d1,&r);
-  delay(100);
-  print_date(&d1);*/
+  Serial.println(check_axis_1(&f,&c));
+  delay(100);*/
 }
 
 
@@ -80,19 +79,19 @@ ISR(ADC_vect)
   switch (f.state)
   {
     case 1:
-    f.Vr1=temp;
+    f.Vr4=temp;
     break;
     
     case 2:
-    f.Vr2=temp;
-    break;
-    
-    case 3:
     f.Vr3=temp;
     break;
     
+    case 3:
+    f.Vr2=temp;
+    break;
+    
     case 4:
-    f.Vr4=temp;
+    f.Vr1=temp;
     f.state=0;
     break;
   
@@ -155,4 +154,41 @@ void print_servo_info(motor* m1,motor* m2)
   Serial.print(" Servo2: ");
   Serial.print(m2->current_position);
   Serial.print("\n");
+}
+
+int correct_position(fotoresistors* f,control_prams* c,motor* m1, motor* m2)
+{
+
+  while(check_axis_2(f,c)!=0)
+  {
+    if(check_axis_2(f,c)==-1)
+    {
+      if(m1->current_position>=m1->max_pulse)
+      {
+        Serial.println("max1");
+        break;
+      }
+      else
+      {
+        m1->setpoint_position=(m1->current_position+c->one_step);
+        motor_move(m1);
+      }
+    }
+    else if(check_axis_2(f,c)==1)
+    {
+      if(m1->current_position<=m1->min_pulse)
+      {
+        Serial.println("min1");
+        break;
+      }
+      else
+      {
+        m1->setpoint_position=(m1->current_position-c->one_step);
+        motor_move(m1);
+      }
+    }
+    read_resistors(f,&params);
+    correct_fotoresistors(f,&params);
+    print_fotoresistors(f); 
+  }
 }

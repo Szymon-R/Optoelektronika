@@ -12,14 +12,14 @@ void motors_init_default(motor* m1, motor* m2)
 //  DDRD|=(1<<m2->pin);
 //  PORTD|=(1<<m1->pin);
 //  PORTD|=(1<<m2->pin);
-  m1->min_step=1;
-  m1->medium_step=20;
-  m1->max_step=50;
+  m1->min_step=2;
+  m1->medium_step=5;
+  m1->max_step=10;
   m1->offset=100;
-  m1->min_pulse=600;
-  m1->max_pulse=2600;
-  m1->wait=10;
-
+  m1->min_pulse=800;
+  m1->max_pulse=2150;
+  m1->wait=5;
+  m1->current_position=m1->min_pulse;
 }
 
 void motor_get_position(motor* m)

@@ -1,5 +1,3 @@
-
-
 #include "Arduino.h"
 #define SLA_W 0xA2
 #define SLA_R 0xA3

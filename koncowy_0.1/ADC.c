@@ -7,8 +7,8 @@ void ADC_Init(fotoresistors* f, ADC_params* params)
   ADMUX  =    (0<<REFS1) | (0<<REFS0)   |(0<<MUX2) | (0<<MUX0);
    f->state=0;
    params->resolution=1024;
-   params->reference_voltage=5;
-   params->reference_voltage=5;
+   params->reference_voltage=3.3;
+   params->reference_voltage=3.3;
    params->resolution=1024;
    DDRC=0x00;
    PINC=0x01;
@@ -44,7 +44,7 @@ void read_resistors(fotoresistors* f, ADC_params* params)
 
 void correct_fotoresistors(fotoresistors* f, ADC_params* params)
 {
-  float a1=-2.2275;
+ /* float a1=-2.2275;
   float a2=-0.0113;
   float a3=2.0725;
   float a4=0.0038;
@@ -56,6 +56,19 @@ void correct_fotoresistors(fotoresistors* f, ADC_params* params)
   f->Vr1+=a1*f->Vr1+b1;
   f->Vr2+=a2*f->Vr2+b2;
   f->Vr3+=a3*f->Vr3+b3;
-  f->Vr4+=a4*f->Vr4+b4;
-  
+  f->Vr4+=a4*f->Vr4+b4;*/
+
+  float a1=-1.05423;
+  float a2=-1.05423;
+  float a3=2.582219;
+  float a4=-0.66579;
+
+  float b1=2.804253;
+  float b2=2.804253;
+  float b3=-6.8687;
+  float b4=-1.771006;
+  f->Vr1+=(a1*f->Vr1+b1)/100;
+  f->Vr2+=(a2*f->Vr2+b2)/100;
+  f->Vr3+=(a3*f->Vr3+b3)/100;
+  f->Vr4+=(a4*f->Vr4+b4)/100;
 }
